@@ -1,0 +1,22 @@
+{
+  "name": "elite-dangerous-commodity-bot",
+  "version": "1.0.0",
+  "description": "Automated system to retrieve the closest station which sells a required commodity. Interfaces through Twitch chat and Discord ",
+  "main": "edcb.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/purrcat259/elite-dangerous-commodity-bot.git"
+  },
+  "keywords": [
+    "elite"
+  ],
+  "author": "purrcat259",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/purrcat259/elite-dangerous-commodity-bot/issues"
+  },
+  "homepage": "https://github.com/purrcat259/elite-dangerous-commodity-bot#readme"
+}
