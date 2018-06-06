@@ -7,7 +7,7 @@ import (
 
 func main() {
     fmt.Println("Hello, EDCB")
-    commodity := "bla"
+    commodity := "Narcotics"
     system := "Vasukili"
     getClosestCommoditySystem(commodity, system)
 }
@@ -23,10 +23,13 @@ func getClosestCommoditySystem(commodity string, system string) {
     fmt.Println(fmt.Sprintf("System: %s Exists: %t, Commodity: %s, Exists: %t", system, systemExists, commodity, commodityExists))
     if !commodityExists {
         // TODO: Respond
-    }
-    if !systemExists {
+    } else if !systemExists {
         // TODO: Respond
     }
+    // If both exist, get every station that sells the commodity
+    // For each station, get the system IDs. Make sure to remove duplicates
+    // For each system, calculate the distance (using X, Y and Z) and sort in order of closest
+    findClosestStationSellingCommodity(commodityId, systemId)
 }
 
 func getCommodityId(commodity string) (int) {
@@ -39,4 +42,9 @@ func getSystemId(system string) (int) {
     fmt.Println("Retrieving system ID for:", system)
     systemId := eddb.GetSystemIdFromStorage(system)
     return systemId
+}
+
+func findClosestStationSellingCommodity(commodityId int, systemId int) {
+    stationsSellingCommodity := eddb.GetStationsSellingCommodityFromStorage(commodityId)
+    fmt.Println(stationsSellingCommodity)
 }
