@@ -6,20 +6,55 @@ import (
     "github.com/purrcat259/elite-dangerous-commodity-bot/models"
     "time"
     "math"
+    "encoding/json"
+    "net/http"
+    "github.com/gorilla/mux"
 )
 
+type Query struct {
+    Commodity string `json:commodity`
+    System string `json:system`
+}
+
+type Answer struct {
+    Commodity string `json:commodity`
+    System string `json:system`
+    ClosestSystem models.StarSystem `json:closest_system`
+    RelevantStations []models.Station `json:relevant_stations`
+}
 
 
 func main() {
-    queryStart := time.Now().Unix()
     fmt.Println("Hello, EDCB")
-    commodity := "Coffee"
-    system := "Brestla"
+    router := mux.NewRouter()
+    router.HandleFunc("/closest/", QueryForCommodity).Methods("POST")
+    http.ListenAndServe(":8000", router)
+}
+
+func QueryForCommodity(w http.ResponseWriter, r *http.Request) {
+    queryStart := time.Now().Unix()
+    decoder := json.NewDecoder(r.Body)
+    var query Query
+    err := decoder.Decode(&query)
+    if err != nil {
+        panic(err)
+    }
+    // commodity := "Coffee"
+    // system := "Brestla"
+    commodity := query.Commodity
+    system := query.System
     closestSystem, relevantStations := getClosestCommoditySystemAndStations(commodity, system)
     fmt.Println(fmt.Sprintf("Closest System: %s, with %d station/s", closestSystem.Name, len(relevantStations)))
     queryFinish := time.Now().Unix()
     queryTime := queryFinish - queryStart
     fmt.Println(fmt.Sprintf("Query took: %d seconds", queryTime))
+    answer := Answer{
+        Commodity: commodity,
+        System: system,
+        ClosestSystem: closestSystem,
+        RelevantStations: relevantStations,
+    }
+    json.NewEncoder(w).Encode(answer)
 }
 
 func getClosestCommoditySystemAndStations(commodity string, system string) (models.StarSystem, []models.Station) {
