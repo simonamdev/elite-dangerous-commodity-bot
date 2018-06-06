@@ -43,29 +43,50 @@ func GetSystemIdFromStorage(system string) (int) {
     return systemId
 }
 
-func GetStationsSellingCommodityFromStorage(commodityId int) ([]int) {
+func GetStationsInSystem(systemId int) []models.Station {
     db := getDbConnection()
     defer db.Close()
-    queryStatement := `SELECT stationId FROM listings WHERE commodityId == %d;`
-    // Not ideal, but there does not seem to be a way to prepare a statement without providing the number of rows
-    // you will receive
-    rows, err := db.Query(fmt.Sprintf(queryStatement, commodityId))
+    checkStatement := `SELECT stationId, name systemId, distanceToStar, maxLandingPad FROM stations WHERE systemId == %d;`
+    rows, err := db.Query(fmt.Sprintf(checkStatement, systemId))
     if err != nil {
         panic(err)
     }
     defer rows.Close()
-    var stationIds []int
+    stations := make([]models.Station, 0)
     for rows.Next() {
-        var stationId int
-        err = rows.Scan(&stationId)
+        var station models.Station
+        err = rows.Scan(&station.Id, &station.Name, &station.SystemId, &station.DistanceToStar, &station.MaxLandingPad)
         if err != nil {
             panic(err)
         }
-        stationIds = append(stationIds, stationId)
-        fmt.Println(stationId)
+        fmt.Println(station)
+        stations = append(stations, station)
     }
-    fmt.Println(fmt.Sprintf("%d Stations found which sell commodity with ID: %d", len(stationIds), commodityId))
-    return stationIds
+    return stations
+}
+
+func GetStationsSellingCommodityInSystem(systemId int, commodityId int) ([]models.Station) {
+    db := getDbConnection()
+    defer db.Close()
+    queryStatement := `SELECT stations.stationId, stations.name, stations.systemId, stations.distanceToStar, stations.maxLandingPad FROM listings INNER JOIN stations ON stations.stationId == listings.stationId WHERE commodityId == %d AND stations.systemId == %d;`
+    // Not ideal, but there does not seem to be a way to prepare a statement without providing the number of rows
+    // you will receive
+    rows, err := db.Query(fmt.Sprintf(queryStatement, commodityId, systemId))
+    if err != nil {
+        panic(err)
+    }
+    defer rows.Close()
+    var stations []models.Station
+    for rows.Next() {
+        var station models.Station
+        err = rows.Scan(&station.Id, &station.Name, &station.SystemId, &station.DistanceToStar, &station.MaxLandingPad)
+        if err != nil {
+            panic(err)
+        }
+        stations = append(stations, station)
+        fmt.Println(station)
+    }
+    return stations
 }
 
 func ConvertStationIdsToSystemIds(stationIds []int) []int {
@@ -122,7 +143,7 @@ func GetSystemsSellingCommodity(commodityId int) ([]int) {
     defer db.Close()
     // Not ideal, but there does not seem to be a way to prepare a statement without providing the number of rows
     // you will receive
-    queryStatement := `SELECT populatedSystems.systemId FROM populatedSystems INNER JOIN  stations ON populatedSystems.systemId == stations.systemId INNER JOIN listings on listings.stationId == stations.stationId WHERE listings.commodityId = %d;`
+    queryStatement := `SELECT populatedSystems.systemId FROM populatedSystems INNER JOIN  stations ON populatedSystems.systemId == stations.systemId INNER JOIN listings on listings.stationId == stations.stationId WHERE listings.commodityId = %d AND stations.hasDocking = 1;`
     systemIds := make([]int, 0)
     rows, err := db.Query(fmt.Sprintf(queryStatement, commodityId))
     if err != nil {

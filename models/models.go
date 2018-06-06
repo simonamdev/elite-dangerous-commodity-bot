@@ -7,3 +7,11 @@ type StarSystem struct {
     Y float64 `json:y`
     Z float64 `json:z`
 }
+
+type Station struct {
+    Id int `json:station_id`
+    Name string `json:station_name`
+    SystemId int `json:system_id`
+    DistanceToStar int `json:distance_to_star`
+    MaxLandingPad string `json:max_landing_pad`
+}

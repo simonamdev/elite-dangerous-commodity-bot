@@ -11,13 +11,18 @@ import (
 
 
 func main() {
+    queryStart := time.Now().Unix()
     fmt.Println("Hello, EDCB")
     commodity := "Coffee"
     system := "Brestla"
-    getClosestCommoditySystem(commodity, system)
+    closestSystem, relevantStations := getClosestCommoditySystemAndStations(commodity, system)
+    fmt.Println(fmt.Sprintf("Closest System: %s, with %d station/s", closestSystem.Name, len(relevantStations)))
+    queryFinish := time.Now().Unix()
+    queryTime := queryFinish - queryStart
+    fmt.Println(fmt.Sprintf("Query took: %d seconds", queryTime))
 }
 
-func getClosestCommoditySystem(commodity string, system string) {
+func getClosestCommoditySystemAndStations(commodity string, system string) (models.StarSystem, []models.Station) {
     s := fmt.Sprintf("Finding closest system to %s which sells commodity: %s", system, commodity)
     fmt.Println(s);
     commodityId := getCommodityId(commodity)
@@ -34,7 +39,14 @@ func getClosestCommoditySystem(commodity string, system string) {
     // If both exist, get every station that sells the commodity
     // For each station, get the system IDs. Make sure to remove duplicates
     // For each system, calculate the distance (using X, Y and Z) and sort in order of closest
-    findClosestStationSellingCommodity(commodityId, systemId)
+    referenceSystem := eddb.GetSystemDetails(systemId)
+    closestSystem := findClosestStationSellingCommodity(commodityId, systemId)
+    distanceToClosest := calculateEuclideanDistance(referenceSystem, closestSystem)
+
+    fmt.Println(fmt.Sprintf("Closest System: %s, Distance: %.2fLy", closestSystem.Name, distanceToClosest))
+    relevantStations := eddb.GetStationsSellingCommodityInSystem(closestSystem.Id, commodityId)
+    fmt.Println(relevantStations)
+    return closestSystem, relevantStations
 }
 
 func getCommodityId(commodity string) (int) {
@@ -49,23 +61,12 @@ func getSystemId(system string) (int) {
     return systemId
 }
 
-func findClosestStationSellingCommodity(commodityId int, referenceSystemId int) {
-    queryStart := time.Now().Unix()
-
-    referenceSystem := eddb.GetSystemDetails(referenceSystemId)
-
+func findClosestStationSellingCommodity(commodityId int, referenceSystemId int) (models.StarSystem) {
     systemsSellingCommodity := eddb.GetSystemsSellingCommodity(commodityId)
     fmt.Println(fmt.Sprintf("%d Stations sell the required commodity", len(systemsSellingCommodity)))
-
     fmt.Println("Calculating closest system")
     closestSystem := getClosestStarSystem(referenceSystemId, systemsSellingCommodity)
-    fmt.Println(closestSystem)
-
-    fmt.Println("Distance to closest system: ", calculateEuclideanDistance(referenceSystem, closestSystem))
-
-    queryFinish := time.Now().Unix()
-    queryTime := queryFinish - queryStart
-    fmt.Println(fmt.Sprintf("Query took: %d seconds", queryTime))
+    return closestSystem
 }
 
 func getSystemIdsOfStations(stationIds []int) []int {
@@ -86,6 +87,7 @@ func getClosestStarSystem(currentSystemId int, systemIds []int) models.StarSyste
         // fmt.Println(distance)
         if distance < closestDistance {
             closestSystem = starSystem
+            closestDistance = distance
         }
     }
     return closestSystem
