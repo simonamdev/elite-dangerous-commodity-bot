@@ -5,6 +5,8 @@ import (
     "net/http"
     "encoding/json"
     "io/ioutil"
+    "database/sql"
+    _ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
@@ -18,10 +20,10 @@ func getClosestCommoditySystem(commodity string, system string) {
     s := fmt.Sprintf("Finding  closest system to %s which sells commodity: %s", system, commodity)
     fmt.Println(s);
     var systemExists bool
-    var commodityId int
+    var commodityExists bool
     // systemExists = checkSystemExists(system)
-    commodityId = checkCommodityExists(commodity)
-    fmt.Println(fmt.Sprintf("System: %s exists: %t, Commodity: %s, ID: %d", system, systemExists, commodity, commodityId))
+    commodityExists = checkCommodityExists(commodity)
+    fmt.Println(fmt.Sprintf("System: %s exists: %t, Commodity: %s, Exists: %t", system, systemExists, commodity, commodityExists))
 }
 
 // Function to check whether a passed system exists
@@ -48,28 +50,44 @@ func checkSystemExists(system string) (bool) {
 // Function to check whether the passed commodity name exists
 // Currently iterates through commodities.json from eddb each and every time
 // Reference: https://eddb.io/api
-func checkCommodityExists(commodity string) (int) {
-    commodityFilepath := "data/commodities.json"
-    raw, err := ioutil.ReadFile(commodityFilepath)
+func checkCommodityExists(commodity string) (bool) {
+    // commodityFilepath := "data/commodities.json"
+    // raw, err := ioutil.ReadFile(commodityFilepath)
+    // if err != nil {
+    //     panic(err)
+    // }
+    // var data []map[string]interface{}
+    // err = json.Unmarshal([]byte(raw), &data)
+    // if err != nil {
+    //     panic(err)
+    // }
+    // // Get only the commodity names from the commdity file
+    // for _, v := range data {
+    //     value, _ := v["name"].(string)
+    //     fmt.Println(value)
+    //     if commodity == value {
+    //         comm_id, _ := v["id"].(int)
+    //         if err != nil {
+    //             panic(err)
+    //         }
+    //         return comm_id
+    //     }
+    // }
+    // return 0
+    db, err := sql.Open("sqlite3", "./data/eddb.db")
     if err != nil {
         panic(err)
     }
-    var data []map[string]interface{}
-    err = json.Unmarshal([]byte(raw), &data)
+    defer db.Close()
+    checkStatement := `SELECT COUNT(*) FROM commodities WHERE name == ?;`
+    statement, err := db.Prepare(checkStatement)
     if err != nil {
         panic(err)
     }
-    // Get only the commodity names from the commdity file
-    for _, v := range data {
-        value, _ := v["name"].(string)
-        fmt.Println(value)
-        if commodity == value {
-            comm_id, _ := v["id"].(int)
-            if err != nil {
-                panic(err)
-            }
-            return comm_id
-        }
-    }
-    return 0
+    defer statement.Close()
+    var amount int
+    err = statement.QueryRow(commodity).Scan(&amount)
+    fmt.Println(amount)
+    commodityExists := amount > 0
+    return commodityExists
 }
