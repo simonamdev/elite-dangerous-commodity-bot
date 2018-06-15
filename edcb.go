@@ -7,6 +7,7 @@ import (
     "time"
     "math"
     "os"
+    "strings"
 )
 
 func main() {
@@ -14,13 +15,14 @@ func main() {
     fmt.Println("Hello, EDCB")
     args := os.Args[1:]
     if len(args) != 2 {
+        fmt.Println("Arguments required: COMMODITY SYSTEM")
         fmt.Println("Actual argument count:", len(args), "Args:", args)
         os.Exit(1)
     }
     // commodity := "Coffee"
     // system := "Brestla"
-    commodity := args[0]
-    system := args[1]
+    commodity := strings.Title(args[0])
+    system := strings.Title(args[1])
     closestSystem, relevantStations := getClosestCommoditySystemAndStations(commodity, system)
     fmt.Println("Answer: ", closestSystem, ", ", relevantStations)
     queryFinish := time.Now().Unix()
