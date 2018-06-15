@@ -6,9 +6,9 @@ import (
     "github.com/purrcat259/elite-dangerous-commodity-bot/models"
     "time"
     "math"
-    "os"
-    "strings"
     "encoding/json"
+    "flag"
+    "strings"
 )
 
 type Commodity struct {
@@ -26,21 +26,9 @@ type Response struct {
 
 func main() {
     queryStart := time.Now().Unix()
-    // fmt.Println("Hello, EDCB")
-    args := os.Args[1:]
-    if len(args) != 2 && len(args) != 3 {
-        fmt.Println("Arguments required: COMMODITY SYSTEM")
-        fmt.Println("Actual argument count:", len(args), "Args:", args)
-        os.Exit(1)
-    }
-    // commodity := "Coffee"
-    // system := "Brestla"
-    commodityName := strings.Title(args[0])
-    systemName := strings.Title(args[1])
-    verbose := false
-    if (len(args) == 3) {
-        verbose = true
-    }
+    commodityName, systemName, verbose := parseArguments()
+    commodityName = strings.Title(commodityName)
+    systemName = strings.Title(systemName)
     closestSystem, relevantStations, commodity, referenceSystem := getClosestCommoditySystemAndStations(commodityName, systemName, verbose)
     // Place the answer in a struct
     answer := Response{commodity, referenceSystem, closestSystem, relevantStations}
@@ -57,6 +45,14 @@ func main() {
     if verbose {
         fmt.Println(fmt.Sprintf("Query took: %d seconds", queryTime))
     }
+}
+
+func parseArguments() (string, string, bool) {
+    commodityName := flag.String("commodity", "", "The Commodity name")
+    referenceSystemName := flag.String("system", "", "The reference System name")
+    verbose := flag.Bool("verbose", false, "Print debug information to console")
+    flag.Parse()
+    return *commodityName, *referenceSystemName, *verbose
 }
 
 func getClosestCommoditySystemAndStations(commodity string, system string, verbose bool) (models.StarSystem, []models.Station, Commodity, models.StarSystem) {
