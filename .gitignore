@@ -1,6 +1,7 @@
 # Personal
 dist/
 data/
+secrets/
 
 # Logs
 logs
