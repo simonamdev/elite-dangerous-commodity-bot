@@ -6,13 +6,21 @@ import (
     "github.com/purrcat259/elite-dangerous-commodity-bot/models"
     "time"
     "math"
+    "os"
 )
 
 func main() {
     queryStart := time.Now().Unix()
     fmt.Println("Hello, EDCB")
-    commodity := "Coffee"
-    system := "Brestla"
+    args := os.Args[1:]
+    if len(args) != 2 {
+        fmt.Println("Actual argument count:", len(args), "Args:", args)
+        os.Exit(1)
+    }
+    // commodity := "Coffee"
+    // system := "Brestla"
+    commodity := args[0]
+    system := args[1]
     closestSystem, relevantStations := getClosestCommoditySystemAndStations(commodity, system)
     fmt.Println("Answer: ", closestSystem, ", ", relevantStations)
     queryFinish := time.Now().Unix()
