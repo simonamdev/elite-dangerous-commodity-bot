@@ -8,39 +8,71 @@ import (
     "math"
     "os"
     "strings"
+    "encoding/json"
 )
+
+type Commodity struct {
+    Id int `json:"id"`
+    Name string `json:"name"`
+    Exists bool `json:"exists"`
+}
+
+type Response struct {
+    Commodity Commodity         `json:"commodity"`
+    ReferenceSystem    models.StarSystem `json:"reference_system"`
+    ClosestSystem    models.StarSystem `json:"closest_system"`
+    Stations  []models.Station  `json:"stations"`
+}
 
 func main() {
     queryStart := time.Now().Unix()
-    fmt.Println("Hello, EDCB")
+    // fmt.Println("Hello, EDCB")
     args := os.Args[1:]
-    if len(args) != 2 {
+    if len(args) != 2 && len(args) != 3 {
         fmt.Println("Arguments required: COMMODITY SYSTEM")
         fmt.Println("Actual argument count:", len(args), "Args:", args)
         os.Exit(1)
     }
     // commodity := "Coffee"
     // system := "Brestla"
-    commodity := strings.Title(args[0])
-    system := strings.Title(args[1])
-    closestSystem, relevantStations := getClosestCommoditySystemAndStations(commodity, system)
-    fmt.Println("Answer: ", closestSystem, ", ", relevantStations)
+    commodityName := strings.Title(args[0])
+    systemName := strings.Title(args[1])
+    verbose := false
+    if (len(args) == 3) {
+        verbose = true
+    }
+    closestSystem, relevantStations, commodity, referenceSystem := getClosestCommoditySystemAndStations(commodityName, systemName, verbose)
+    // Place the answer in a struct
+    answer := Response{commodity, referenceSystem, closestSystem, relevantStations}
+    fmt.Println(len(relevantStations))
+    // Serialise the struct to JSON for writing to stdout
+    b, err := json.Marshal(answer)
+    if err != nil {
+        panic(err)
+    }
+    // fmt.Println("Answer: ", closestSystem, ", ", relevantStations)
+    fmt.Println(string(b))
     queryFinish := time.Now().Unix()
     queryTime := queryFinish - queryStart
-    fmt.Println(fmt.Sprintf("Query took: %d seconds", queryTime))
+    if verbose {
+        fmt.Println(fmt.Sprintf("Query took: %d seconds", queryTime))
+    }
 }
 
-func getClosestCommoditySystemAndStations(commodity string, system string) (models.StarSystem, []models.Station) {
-    s := fmt.Sprintf("Finding closest system to %s which sells commodity: %s", system, commodity)
-    fmt.Println(s);
+func getClosestCommoditySystemAndStations(commodity string, system string, verbose bool) (models.StarSystem, []models.Station, Commodity, models.StarSystem) {
+    if verbose {
+        fmt.Println(fmt.Sprintf("Finding closest system to %s which sells commodity: %s", system, commodity))
+    }
     commodityId := getCommodityId(commodity)
     systemId := getSystemId(system)
-    fmt.Println(fmt.Sprintf("System: %s ID: %d, Commodity: %s, ID: %d", system, systemId, commodity, commodityId))
     commodityExists := commodityId != 0
     systemExists := systemId != 0
-    fmt.Println(fmt.Sprintf("System: %s Exists: %t, Commodity: %s, Exists: %t", system, systemExists, commodity, commodityExists))
+    if verbose {
+        fmt.Println(fmt.Sprintf("System: %s ID: %d, Commodity: %s, ID: %d", system, systemId, commodity, commodityId))
+        fmt.Println(fmt.Sprintf("System: %s Exists: %t, Commodity: %s, Exists: %t", system, systemExists, commodity, commodityExists))
+    }
     if !commodityExists {
-        // TODO: Respond
+        // TODO Respond
     } else if !systemExists {
         // TODO: Respond
     }
@@ -51,28 +83,32 @@ func getClosestCommoditySystemAndStations(commodity string, system string) (mode
     closestSystem := findClosestStationSellingCommodity(commodityId, systemId)
     distanceToClosest := calculateEuclideanDistance(referenceSystem, closestSystem)
 
-    fmt.Println(fmt.Sprintf("Closest System: %s, Distance: %.2fLy", closestSystem.Name, distanceToClosest))
     relevantStations := eddb.GetStationsSellingCommodityInSystem(closestSystem.Id, commodityId)
-    fmt.Println(relevantStations)
-    return closestSystem, relevantStations
+    if verbose {
+        fmt.Println(fmt.Sprintf("Closest System: %s, Distance: %.2fLy", closestSystem.Name, distanceToClosest))
+        fmt.Println(relevantStations)
+    }
+    // Create the commodity
+    comm := Commodity{commodityId, commodity, commodityExists}
+    return closestSystem, relevantStations, comm, referenceSystem
 }
 
 func getCommodityId(commodity string) (int) {
-    fmt.Println("Retrieving commodity ID for:", commodity)
+    // fmt.Println("Retrieving commodity ID for:", commodity)
     commodityId := eddb.GetCommodityIdFromStorage(commodity)
     return commodityId
 }
 
 func getSystemId(system string) (int) {
-    fmt.Println("Retrieving system ID for:", system)
+    // fmt.Println("Retrieving system ID for:", system)
     systemId := eddb.GetSystemIdFromStorage(system)
     return systemId
 }
 
 func findClosestStationSellingCommodity(commodityId int, referenceSystemId int) (models.StarSystem) {
     systemsSellingCommodity := eddb.GetSystemsSellingCommodity(commodityId)
-    fmt.Println(fmt.Sprintf("%d Stations sell the required commodity", len(systemsSellingCommodity)))
-    fmt.Println("Calculating closest system")
+    // fmt.Println(fmt.Sprintf("%d Stations sell the required commodity", len(systemsSellingCommodity)))
+    // fmt.Println("Calculating closest system")
     closestSystem := getClosestStarSystem(referenceSystemId, systemsSellingCommodity)
     return closestSystem
 }

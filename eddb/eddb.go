@@ -2,13 +2,16 @@ package eddb
 
 import (
     "fmt"
+    "path/filepath"
     "github.com/purrcat259/elite-dangerous-commodity-bot/models"
     "database/sql"
     _ "github.com/mattn/go-sqlite3"
 )
 
 func getDbConnection() (*sql.DB) {
-    db, err := sql.Open("sqlite3", "./data/eddb.db")
+    dbPath, err := filepath.Abs("./data/eddb.db")
+    // fmt.Println("Accessing Database at:", dbPath)
+    db, err := sql.Open("sqlite3", dbPath)
     if err != nil {
         panic(err)
     }
@@ -59,7 +62,7 @@ func GetStationsInSystem(systemId int) []models.Station {
         if err != nil {
             panic(err)
         }
-        fmt.Println(station)
+        // fmt.Println(station)
         stations = append(stations, station)
     }
     return stations
@@ -84,7 +87,7 @@ func GetStationsSellingCommodityInSystem(systemId int, commodityId int) ([]model
             panic(err)
         }
         stations = append(stations, station)
-        fmt.Println(station)
+        // fmt.Println(station)
     }
     return stations
 }
