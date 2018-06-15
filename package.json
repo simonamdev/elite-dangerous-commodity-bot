@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/purrcat259/elite-dangerous-commodity-bot#readme",
   "devDependencies": {
-    "fuse-box": "^3.2.2"
+    "tmi.js": "^1.2.1",
+    "xmlhttprequest": "^1.8.0"
   }
 }
