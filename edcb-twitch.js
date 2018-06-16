@@ -6,9 +6,10 @@ var DB = require('./db.js');
 
 const options = require('./options.js');
 
-// let db = new DB(edcbDataPath, debug);
-// db.initialise();
-// db.getStreamerChannels();
+let db = new DB(edcbDataPath, debug);
+db.initialise().then(() => {
+    db.getStreamerChannels();
+});
 
 console.log('Starting EDCB Twitch interface');
 console.log(`Using oauth token: ${options.twitch.oauthToken.substring(0, 10)}...`);

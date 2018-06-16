@@ -7,7 +7,6 @@ class DB {
     constructor(path, debug) {
         this.debug = debug;
         this.path = path
-        this.createFileIfNotExists();
     }
 
     openDatabaseConnection() {
@@ -20,33 +19,37 @@ class DB {
                 if (err) {
                     throw err;
                 }
-                this.initialise();
             });
         }
     }
 
     initialise() {
-        this.openDatabaseConnection();
-        console.log('Initialising database schema');
-        this.db.serialize(() => {
-            this.db.run(
-                `CREATE TABLE IF NOT EXISTS channels (
-                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL UNIQUE,
-                    timeAdded INTEGER NOT NULL,
-                    valid BOOLEAN NOT NULL CHECK (valid IN (0, 1))
-                );`
-            );
-            this.db.run(
-                `INSERT INTO channels
-                    (name, timeAdded, valid)
-                    VALUES
-                    ('Purrcat259', 0, 1);
-                `
-            );
-            this.db.close();
+        return new Promise((resolve, reject) => {
+            this.createFileIfNotExists();
+            console.log('Initialising database schema');
+            this.openDatabaseConnection();
+            this.db.serialize(() => {
+                this.db.run(
+                    `CREATE TABLE IF NOT EXISTS channels (
+                        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL UNIQUE,
+                        timeAdded INTEGER NOT NULL,
+                        valid BOOLEAN NOT NULL CHECK (valid IN (0, 1))
+                    );`
+                );
+                this.db.run(
+                    `INSERT INTO channels
+                        (name, timeAdded, valid)
+                        VALUES
+                        ('Purrcat259', 0, 1);
+                    `
+                );
+            });
+            this.db.close(() => {
+                console.log('Database schema initialised');
+                resolve();
+            });
         });
-        console.log('Database schema initialised');
     }
 
     getStreamerChannels() {
