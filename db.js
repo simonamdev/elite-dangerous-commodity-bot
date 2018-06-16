@@ -53,13 +53,19 @@ class DB {
     }
 
     getStreamerChannels() {
-        this.openDatabaseConnection();
-        this.db.serialize(() => {
-            this.db.each(`SELECT name FROM channels;`, (err, row) => {
-                console.log(err);
-                console.log(row);
+        return new Promise((resolve, reject) => {
+            let streamerNames = [];
+            this.openDatabaseConnection();
+            this.db.serialize(() => {
+                this.db.all(`SELECT name FROM channels WHERE valid = 1;`, (err, rows) => {
+                    streamerNames = rows.map((row) => {
+                        return row.name;
+                    });
+                });
+                this.db.close(() => {
+                    resolve(streamerNames);
+                });
             });
-            this.db.close();
         });
     }
 }
