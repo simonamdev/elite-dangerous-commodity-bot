@@ -66,6 +66,7 @@ func getClosestCommoditySystemAndStations(commodity string, system string, verbo
         fmt.Println(fmt.Sprintf("System: %s ID: %d, Commodity: %s, ID: %d", system, systemId, commodity, commodityId))
         fmt.Println(fmt.Sprintf("System: %s Exists: %t, Commodity: %s, Exists: %t", system, systemExists, commodity, commodityExists))
     }
+    // TODO: Cut off here rather than make a query that will definitely fail
     if !commodityExists {
         // TODO Respond
     } else if !systemExists {
