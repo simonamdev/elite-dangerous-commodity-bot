@@ -2,15 +2,20 @@ var tmi = require('tmi.js');
 var fs = require('fs');
 var path = require('path');
 var exec = require('child_process').execFile;
+var DB = require('./db.js');
+
+let debug = true;
+const edcbDataPath = './data/edcb.db';
+
+let db = new DB(edcbDataPath, debug);
+db.initialise();
+db.getStreamerChannels();
 
 // Load in oauth token from file
 let oauthFileName = 'secrets/twitch-oauth';
 let oauthToken = fs.readFileSync(oauthFileName, 'utf8');
 
 const pathToOptimiser = path.resolve('elite-dangerous-commodity-bot.exe');
-console.log(pathToOptimiser);
-
-let debug = false;
 
 console.log('Starting EDCB Twitch interface');
 console.log(`Using oauth token: ${oauthToken.substring(0, 10)}...`);
@@ -24,10 +29,9 @@ let options = {
     },
     identity: {
         username: 'ed_commodity_bot',
-        // username: 'Purrcat259',
         password: oauthToken
     },
-    channels: ['Purrcat259']
+    channels: ['ed_commodity_bot']
 };
 
 let client = new tmi.client(options);

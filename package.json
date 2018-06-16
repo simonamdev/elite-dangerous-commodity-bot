@@ -22,5 +22,8 @@
   "devDependencies": {
     "tmi.js": "^1.2.1",
     "xmlhttprequest": "^1.8.0"
+  },
+  "dependencies": {
+    "sqlite3": "^4.0.0"
   }
 }
