@@ -48,13 +48,16 @@ client.on('chat', (channel, userstate, message, self) => {
     console.log(`[${channel}] <${userstate['display-name']}>: ${message}`);
     if (message.indexOf('@ed_commodity_bot') !== -1) {
         let data = message.split(', ')
-        let commodity = data[0].split('ed_commodity_bot ')[1]
-        let system = data[1];
+        let commodityName = data[0].split('ed_commodity_bot ')[1]
+        let systemName = data[1];
         // Pass in the commodity and system as CLI params
-        exec(pathToOptimiser, [commodity, system], (error, stdout, stderr) => {
-            console.log(`Error: ${error}`);
-            console.log(`STDOUT: ${stdout}`);
-            console.log(`STDERR: ${stderr}`);
+        let args = [`-commodity=${commodityName}`, `-system=${systemName}`];
+        console.log(`${pathToOptimiser} ${args}`);
+        exec(pathToOptimiser, args, (error, stdout, stderr) => {
+            // console.log(`Error: ${error}`);
+            // console.log(`STDOUT: ${stdout}`);
+            // console.log(`STDERR: ${stderr}`);
+            client.say(channel, stdout);
         });
     }
 });

@@ -32,7 +32,6 @@ func main() {
     closestSystem, relevantStations, commodity, referenceSystem := getClosestCommoditySystemAndStations(commodityName, systemName, verbose)
     // Place the answer in a struct
     answer := Response{commodity, referenceSystem, closestSystem, relevantStations}
-    fmt.Println(len(relevantStations))
     // Serialise the struct to JSON for writing to stdout
     b, err := json.Marshal(answer)
     if err != nil {
