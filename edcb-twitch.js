@@ -46,34 +46,44 @@ db.initialise().then(() => {
 let setupClientEvents = (client) => {
     // Receiving a request for information
     client.on('chat', (channel, userstate, message, self) => {
-        console.log(`[${channel}] <${userstate['display-name']}>: ${message}`);
+        const username = userstate['display-name'];
+        console.log(`[${channel}] <${username}>: ${message}`);
         if (message.indexOf('@ed_commodity_bot') !== -1) {
             let data = message.split(', ')
             let commodityName = data[0].split('ed_commodity_bot ')[1]
             let systemName = data[1];
             // Pass in the commodity and system as CLI params
             let args = [`-commodity=${commodityName}`, `-system=${systemName}`];
-            console.log(`${pathToOptimiser} ${args}`);
-            exec(pathToOptimiser, args, (error, stdout, stderr) => {
+            exec(options.optimiser.path, args, (error, stdout, stderr) => {
                 // console.log(`Error: ${error}`);
                 // console.log(`STDOUT: ${stdout}`);
                 // console.log(`STDERR: ${stderr}`);
                 let data = JSON.parse(stdout);
+                const commodity = data['commodity'];
+                const stations = data['stations'];
                 const referenceSystem = data['reference_system'];
                 const closestSystem = data['closest_system'];
-                const distance = Math.sqrt(
-                    Math.pow(referenceSystem['X'] - closestSystem['X'], 2) +
-                    Math.pow(referenceSystem['Y'] - closestSystem['Y'], 2) +
-                    Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
-                );
-                let response = `
-                @${userstate.username}, I found a system close to ${referenceSystem['Name']}
-                selling ${data['commodity']['name']}.
-                The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
-                Try the following station/s: `;
-                for (let i = 0; i < data['stations'].length; i++) {
-                    let station = data['stations'][i];
-                    response += `[Name: ${station['Name']}, Distance: ${station['DistanceToStar']}Ls, Max Pad: ${station['MaxLandingPad']}]`;
+                let response = 'Unknown error occurred';
+                // Return a negative response if the commodty does not exist or no stations sell it
+                if (!commodity['exists']) {
+                    response = `@${username}, The commodity: ${commodity['name']} does not exist.`;
+                } else if (!stations) {
+                    response = `@${username}, No stations sell the commodity: ${commodity['name']}.`;
+                } else if (commodity['exists'] && stations && stations.length) {
+                    const distance = Math.sqrt(
+                        Math.pow(referenceSystem['X'] - closestSystem['X'], 2) +
+                        Math.pow(referenceSystem['Y'] - closestSystem['Y'], 2) +
+                        Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
+                    );
+                    response = `
+                    @${username}, I found a system close to ${referenceSystem['Name']}
+                    selling ${commodity['name']}.
+                    The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
+                    Try the following station/s: `;
+                    for (let i = 0; i < data['stations'].length; i++) {
+                        let station = data['stations'][i];
+                        response += `[Name: ${station['Name']}, Distance: ${station['DistanceToStar']}Ls, Max Pad: ${station['MaxLandingPad']}]`;
+                    }
                 }
                 client.say(channel, response);
             });
