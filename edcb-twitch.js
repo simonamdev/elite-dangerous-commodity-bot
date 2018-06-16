@@ -4,37 +4,30 @@ var path = require('path');
 var exec = require('child_process').execFile;
 var DB = require('./db.js');
 
-let debug = true;
-const edcbDataPath = './data/edcb.db';
+const options = require('./options.js');
 
-let db = new DB(edcbDataPath, debug);
-db.initialise();
-db.getStreamerChannels();
-
-// Load in oauth token from file
-let oauthFileName = 'secrets/twitch-oauth';
-let oauthToken = fs.readFileSync(oauthFileName, 'utf8');
-
-const pathToOptimiser = path.resolve('elite-dangerous-commodity-bot.exe');
+// let db = new DB(edcbDataPath, debug);
+// db.initialise();
+// db.getStreamerChannels();
 
 console.log('Starting EDCB Twitch interface');
-console.log(`Using oauth token: ${oauthToken.substring(0, 10)}...`);
+console.log(`Using oauth token: ${options.twitch.oauthToken.substring(0, 10)}...`);
 
-let options = {
+let tmiOptions = {
     options: {
-        debug: debug
+        debug: options.debug
     },
     connection: {
         reconnect: true
     },
     identity: {
-        username: 'ed_commodity_bot',
-        password: oauthToken
+        username: options.twitch.username,
+        password: options.twitch.oauthToken
     },
-    channels: ['ed_commodity_bot']
+    channels: [options.twitch.username]
 };
 
-let client = new tmi.client(options);
+let client = new tmi.client(tmiOptions);
 
 client.connect().then((data) => {
     console.log(`Bot connected to Twitch`);
