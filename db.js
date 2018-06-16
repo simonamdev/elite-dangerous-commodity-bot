@@ -41,7 +41,7 @@ class DB {
                     `INSERT INTO channels
                         (name, timeAdded, valid)
                         VALUES
-                        ('Purrcat259', 0, 1);
+                        ('purrcat259', 0, 1);
                     `
                 );
             });
@@ -64,6 +64,33 @@ class DB {
                 });
                 this.db.close(() => {
                     resolve(streamerNames);
+                });
+            });
+        });
+    }
+
+    checkIfStreamerAlreadyRegistered(channelName) {
+        return new Promise((resolve, reject) => {
+            this.getStreamerChannels().then((streamerNames) => {
+                resolve(streamerNames.indexOf(channelName) !== -1);
+            });
+        });
+    }
+
+    registerStreamerChannel(channelName) {
+        return new Promise((resolve, reject) => {
+            this.openDatabaseConnection();
+            this.db.serialize(() => {
+                let statement = this.db.prepare(
+                    `INSERT OR IGNORE INTO channels
+                    (name, timeAdded, valid)
+                    VALUES
+                    (?, ?, 1);`
+                );
+                statement.run(channelName, Math.floor(Date.now() / 1000));
+                statement.finalize();
+                this.db.close(() => {
+                    resolve(true);
                 });
             });
         });

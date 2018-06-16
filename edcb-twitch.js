@@ -19,7 +19,7 @@ const tmiOptions = {
         username: options.twitch.username,
         password: options.twitch.oauthToken
     },
-    channels: []
+    channels: [options.twitch.username]
 };
 
 let db = new DB(options.database.path, options.debug);
@@ -31,11 +31,17 @@ db.initialise().then(() => {
     client.connect().then((data) => {
         console.log(`Bot connected to Twitch`);
         db.getStreamerChannels().then((streamerNames) => {
+            console.log(`Joining ${streamerNames.length} channels`);
             streamerNames.forEach((name) => {
                 console.log(`Joining channel: ${name}`);
                 client.join(name).then(() => {
                     console.log(`Joined channel: ${name}`);
-                    client.say(name, 'E:D Commodity Bot has joined this channel');
+                    client.say(
+                        name,
+                        `E:D Commodity Bot has joined this channel by 
+                        request of the streamer. If this is no longer needed,
+                        please head to ed_commodity_bot's channel and say !leavemychannel
+                        in chat`);
                 });
             });
         });
@@ -46,47 +52,71 @@ db.initialise().then(() => {
 let setupClientEvents = (client) => {
     // Receiving a request for information
     client.on('chat', (channel, userstate, message, self) => {
-        const username = userstate['display-name'];
-        console.log(`[${channel}] <${username}>: ${message}`);
-        if (message.indexOf('@ed_commodity_bot') !== -1) {
-            let data = message.split(', ')
-            let commodityName = data[0].split('ed_commodity_bot ')[1]
-            let systemName = data[1];
-            // Pass in the commodity and system as CLI params
-            let args = [`-commodity=${commodityName}`, `-system=${systemName}`];
-            exec(options.optimiser.path, args, (error, stdout, stderr) => {
-                // console.log(`Error: ${error}`);
-                // console.log(`STDOUT: ${stdout}`);
-                // console.log(`STDERR: ${stderr}`);
-                let data = JSON.parse(stdout);
-                const commodity = data['commodity'];
-                const stations = data['stations'];
-                const referenceSystem = data['reference_system'];
-                const closestSystem = data['closest_system'];
-                let response = 'Unknown error occurred';
-                // Return a negative response if the commodty does not exist or no stations sell it
-                if (!commodity['exists']) {
-                    response = `@${username}, The commodity: ${commodity['name']} does not exist.`;
-                } else if (!stations) {
-                    response = `@${username}, No stations sell the commodity: ${commodity['name']}.`;
-                } else if (commodity['exists'] && stations && stations.length) {
-                    const distance = Math.sqrt(
-                        Math.pow(referenceSystem['X'] - closestSystem['X'], 2) +
-                        Math.pow(referenceSystem['Y'] - closestSystem['Y'], 2) +
-                        Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
-                    );
-                    response = `
-                    @${username}, I found a system close to ${referenceSystem['Name']}
-                    selling ${commodity['name']}.
-                    The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
-                    Try the following station/s: `;
-                    for (let i = 0; i < data['stations'].length; i++) {
-                        let station = data['stations'][i];
-                        response += `[Name: ${station['Name']}, Distance: ${station['DistanceToStar']}Ls, Max Pad: ${station['MaxLandingPad']}]`;
-                    }
+        // Do nothing if EDCB sent the message
+        if (self) {
+            return;
+        }
+        // If they are posting in the ed    commodity bot channel, then handle it as a user registration
+        if (channel === `#${options.twitch.username}` && message === '!joinmychannel') {
+            const username = userstate.username;
+            console.log(`Processing join command for: ${userstate['username']}`);
+            db.checkIfStreamerAlreadyRegistered(username).then((alreadyRegistered) => {
+                if (!alreadyRegistered) {
+                    db.registerStreamerChannel(username).then((completed) => {
+                        if (completed) {
+                            console.log(`Added ${username} to the list of channels`);
+                        }
+                    }).catch((err) => {
+                        console.log(`Error registering channel: ${username}, Error: ${err}`);
+                    });
+                } else {
+                    console.log(`${username} is already registered`);
                 }
-                client.say(channel, response);
             });
+        } else {
+            // In any other channel, work as usual
+            const username = userstate['display-name'];
+            console.log(`[${channel}] <${username}>: ${message}`);
+            if (message.indexOf('@ed_commodity_bot') !== -1) {
+                let data = message.split(', ')
+                let commodityName = data[0].split('ed_commodity_bot ')[1]
+                let systemName = data[1];
+                // Pass in the commodity and system as CLI params
+                let args = [`-commodity=${commodityName}`, `-system=${systemName}`];
+                exec(options.optimiser.path, args, (error, stdout, stderr) => {
+                    // console.log(`Error: ${error}`);
+                    // console.log(`STDOUT: ${stdout}`);
+                    // console.log(`STDERR: ${stderr}`);
+                    let data = JSON.parse(stdout);
+                    const commodity = data['commodity'];
+                    const stations = data['stations'];
+                    const referenceSystem = data['reference_system'];
+                    const closestSystem = data['closest_system'];
+                    let response = 'Unknown error occurred';
+                    // Return a negative response if the commodty does not exist or no stations sell it
+                    if (!commodity['exists']) {
+                        response = `@${username}, The commodity: ${commodity['name']} does not exist.`;
+                    } else if (!stations) {
+                        response = `@${username}, No stations sell the commodity: ${commodity['name']}.`;
+                    } else if (commodity['exists'] && stations && stations.length) {
+                        const distance = Math.sqrt(
+                            Math.pow(referenceSystem['X'] - closestSystem['X'], 2) +
+                            Math.pow(referenceSystem['Y'] - closestSystem['Y'], 2) +
+                            Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
+                        );
+                        response = `
+                        @${username}, I found a system close to ${referenceSystem['Name']}
+                        selling ${commodity['name']}.
+                        The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
+                        Try the following station/s: `;
+                        for (let i = 0; i < data['stations'].length; i++) {
+                            let station = data['stations'][i];
+                            response += `[Name: ${station['Name']}, Distance: ${station['DistanceToStar']}Ls, Max Pad: ${station['MaxLandingPad']}]`;
+                        }
+                    }
+                    client.say(channel, response);
+                });
+            }
         }
     });
 
