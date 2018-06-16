@@ -57,7 +57,24 @@ client.on('chat', (channel, userstate, message, self) => {
             // console.log(`Error: ${error}`);
             // console.log(`STDOUT: ${stdout}`);
             // console.log(`STDERR: ${stderr}`);
-            client.say(channel, stdout);
+            let data = JSON.parse(stdout);
+            const referenceSystem = data['reference_system'];
+            const closestSystem = data['closest_system'];
+            const distance = Math.sqrt(
+                Math.pow(referenceSystem['X'] - closestSystem['X'], 2) +
+                Math.pow(referenceSystem['Y'] - closestSystem['Y'], 2) +
+                Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
+            );
+            let response = `
+            @${userstate.username}, I found a system close to ${referenceSystem['Name']}
+            selling ${data['commodity']['name']}.
+            The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
+            Try the following station/s: `;
+            for (let i = 0; i < data['stations'].length; i++) {
+                let station = data['stations'][i];
+                response += `[Name: ${station['Name']}, Distance: ${station['DistanceToStar']}Ls, Max Pad: ${station['MaxLandingPad']}]`;
+            }
+            client.say(channel, response);
         });
     }
 });
