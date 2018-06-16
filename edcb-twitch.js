@@ -24,6 +24,12 @@ const tmiOptions = {
 
 let db = new DB(options.database.path, options.debug);
 
+// TODO: Move to separate file
+const joinMessage = `E:D Commodity Bot has joined this channel by
+ request of the streamer. If this is no longer needed,
+ please head to ed_commodity_bot's channel and say !leavemychannel
+ in chat`;
+
 db.initialise().then(() => {
     console.log('Starting EDCB Twitch interface');
     console.log(`Using oauth token: ${options.twitch.oauthToken.substring(0, 10)}...`);
@@ -36,12 +42,7 @@ db.initialise().then(() => {
                 console.log(`Joining channel: ${name}`);
                 client.join(name).then(() => {
                     console.log(`Joined channel: ${name}`);
-                    client.say(
-                        name,
-                        `E:D Commodity Bot has joined this channel by 
-                        request of the streamer. If this is no longer needed,
-                        please head to ed_commodity_bot's channel and say !leavemychannel
-                        in chat`);
+                    client.say(name, joinMessage);
                 });
             });
         });
@@ -65,12 +66,25 @@ let setupClientEvents = (client) => {
                     db.registerStreamerChannel(username).then((completed) => {
                         if (completed) {
                             console.log(`Added ${username} to the list of channels`);
+                            // TODO Generalise this with the joining sequence at the top
+                            client.join(username).then(() => {
+                                console.log(`Joined channel: ${username}`);
+                                client.say(
+                                    options.twitch.username,
+                                    `@${username}, I have joined your channel. If you no longer require my services, please say !leavemychannel in this chat`
+                                );
+                                client.say(username, joinMessage);
+                            });
                         }
                     }).catch((err) => {
                         console.log(`Error registering channel: ${username}, Error: ${err}`);
                     });
                 } else {
                     console.log(`${username} is already registered`);
+                    client.say(
+                        options.twitch.username,
+                        `@${username}, According to my records, I'm already setup to join your channel. `
+                    );
                 }
             });
         } else {
