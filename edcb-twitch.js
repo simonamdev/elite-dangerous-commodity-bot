@@ -19,31 +19,32 @@ const tmiOptions = {
         username: options.twitch.username,
         password: options.twitch.oauthToken
     },
-    channels: [options.twitch.username]
+    channels: []
 };
 
 let db = new DB(options.database.path, options.debug);
+
 db.initialise().then(() => {
     console.log('Starting EDCB Twitch interface');
     console.log(`Using oauth token: ${options.twitch.oauthToken.substring(0, 10)}...`);
     let client = new tmi.client(tmiOptions);
     client.connect().then((data) => {
         console.log(`Bot connected to Twitch`);
-        // TODO: Get streamers who signed up to connect to channels
-        db.getStreamerChannels();
-        // console.log(`Connecting to ${streamTeamUsers.length} channels`);
-        // streamTeamUsers.forEach((streamTeamChannel) => {
-        //     client.join(streamTeamChannel).then((data) => {
-        //         console.log(data);
-        //     }).catch((err) => {
-        //         console.error(err);
-        //     });
-        // });
+        db.getStreamerChannels().then((streamerNames) => {
+            streamerNames.forEach((name) => {
+                console.log(`Joining channel: ${name}`);
+                client.join(name).then(() => {
+                    console.log(`Joined channel: ${name}`);
+                    client.say(name, 'E:D Commodity Bot has joined this channel');
+                });
+            });
+        });
     });
     setupClientEvents(client);
 });
 
 let setupClientEvents = (client) => {
+    // Receiving a request for information
     client.on('chat', (channel, userstate, message, self) => {
         console.log(`[${channel}] <${userstate['display-name']}>: ${message}`);
         if (message.indexOf('@ed_commodity_bot') !== -1) {
@@ -79,26 +80,9 @@ let setupClientEvents = (client) => {
         }
     });
 
-    client.on('action', (channel, userstate, message, self) => {
-        console.log(`[${channel}] <${userstate['display-name']}>: ${message}`);
-    });
-
-    client.on('join', (channel, username, self) => {
-        if (self) {
-            console.log(`Stalker joined: ${channel}`);
-        }
-        console.log(`[${channel}] ${username} has joined`);
-    });
-
-    client.on('part', (channel, username, self) => {
-        if (self) {
-            return;
-        }
-        console.log(`[${channel}] ${username} has left`);
-    });
-
-    client.on('hosting', (channel, target, viewers) => {
-        // Disconnect from the channel if they host another one
-        client.part(channel);
-    });
+    // TODO: See if this is needed
+    // Disconnect from the channel if they host another one
+    // client.on('hosting', (channel, target, viewers) => {
+    //     client.part(channel);
+    // });
 };
