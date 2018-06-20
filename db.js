@@ -95,6 +95,22 @@ class DB {
             });
         });
     }
+
+    removeStreamerChannel(channelName) {
+        return new Promise((resolve, reject) => {
+            this.openDatabaseConnection();
+            this.db.serialize(() => {
+                let statement = this.db.prepare(
+                    `DELETE FROM channels WHERE name = ?;`
+                );
+                statement.run(channelName);
+                statement.finalize();
+                this.db.close(() => {
+                    resolve(true);
+                });
+            });
+        });
+    }
 }
 
 module.exports = DB;

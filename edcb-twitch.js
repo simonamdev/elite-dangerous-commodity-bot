@@ -58,9 +58,8 @@ let setupClientEvents = (client) => {
             return;
         }
         // If they are posting in the ed    commodity bot channel, then handle it as a user registration
+        const username = userstate.username;
         if (channel === `#${options.twitch.username}` && message === '!joinmychannel') {
-            const username = userstate.username;
-            console.log(`Processing join command for: ${userstate['username']}`);
             db.checkIfStreamerAlreadyRegistered(username).then((alreadyRegistered) => {
                 if (!alreadyRegistered) {
                     db.registerStreamerChannel(username).then((completed) => {
@@ -84,6 +83,31 @@ let setupClientEvents = (client) => {
                     client.say(
                         options.twitch.username,
                         `@${username}, According to my records, I'm already setup to join your channel. `
+                    );
+                }
+            });
+        } else if (channel === `#${options.twitch.username}` && message === '!leavemychannel') {
+            db.checkIfStreamerAlreadyRegistered(username).then((alreadyRegistered) => {
+                if (alreadyRegistered) {
+                    db.removeStreamerChannel(username).then((completed) => {
+                        if (completed) {
+                            console.log(`Removed ${username} from the list of channels`);
+                            client.part(username).then(() => {
+                                console.log(`Left channel: ${username}`);
+                                client.say(
+                                    options.twitch.username,
+                                    `@${username}, Thank you for using E:D Commodity Bot, I have removed your channel from my records and left. If you have any feedback or suggestions, please reach out to @Purrcat259`
+                                );
+                            });
+                        }
+                    }).catch((err) => {
+                        console.log(`Error removing channel: ${username}, Error: ${err}`);
+                    });
+                } else {
+                    console.log(`${username} is not registered yet`);
+                    client.say(
+                        options.twitch.username,
+                        `@${username}, According to my records, I am not setup to join your channel. If you want me to join, type !joinmychannel`
                     );
                 }
             });
