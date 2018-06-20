@@ -37,13 +37,13 @@ class DB {
                         valid BOOLEAN NOT NULL CHECK (valid IN (0, 1))
                     );`
                 );
-                this.db.run(
-                    `INSERT INTO channels
-                        (name, timeAdded, valid)
-                        VALUES
-                        ('purrcat259', 0, 1);
-                    `
-                );
+                // this.db.run(
+                //     `INSERT INTO channels
+                //         (name, timeAdded, valid)
+                //         VALUES
+                //         ('purrcat259', 0, 1);
+                //     `
+                // );
             });
             this.db.close(() => {
                 console.log('Database schema initialised');
