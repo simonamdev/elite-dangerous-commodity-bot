@@ -71,7 +71,7 @@ let setupClientEvents = (client) => {
                                 console.log(`Joined channel: ${username}`);
                                 client.say(
                                     options.twitch.username,
-                                    `@${username}, I have joined your channel. If you no longer require my services, please say !leavemychannel in this chat`
+                                    `@${username}, I will be joining your channel in a short while. Make sure that the requests are in the form of: "@ed_commodity_bot commodity name, system name", including the comma. If you no longer require my services, please say !leavemychannel in this chat`
                                 );
                                 client.say(username, joinMessage);
                             });
