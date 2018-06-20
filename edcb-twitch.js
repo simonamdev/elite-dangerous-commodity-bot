@@ -36,6 +36,7 @@ db.initialise().then(() => {
     let client = new tmi.client(tmiOptions);
     client.connect().then((data) => {
         console.log(`Bot connected to Twitch`);
+        client.say('ed_commodity_bot', 'E:D Commodity Bot is online');
         db.getStreamerChannels().then((streamerNames) => {
             console.log(`Joining ${streamerNames.length} channels`);
             streamerNames.forEach((name) => {
@@ -57,7 +58,7 @@ let setupClientEvents = (client) => {
         if (self) {
             return;
         }
-        // If they are posting in the ed    commodity bot channel, then handle it as a user registration
+        // If they are posting in the ed commodity bot channel, then handle it as a user registration
         const username = userstate.username;
         if (channel === `#${options.twitch.username}` && message === '!joinmychannel') {
             db.checkIfStreamerAlreadyRegistered(username).then((alreadyRegistered) => {
@@ -68,10 +69,12 @@ let setupClientEvents = (client) => {
                             // TODO Generalise this with the joining sequence at the top
                             client.join(username).then(() => {
                                 console.log(`Joined channel: ${username}`);
+                                let response = `@${username}, I will be joining your channel in a short while. Make sure that the requests are in the form of: "@ed_commodity_bot commodity name, system name", including the comma. If you no longer require my services, please say !leavemychannel in this chat`;
                                 client.say(
                                     options.twitch.username,
-                                    `@${username}, I will be joining your channel in a short while. Make sure that the requests are in the form of: "@ed_commodity_bot commodity name, system name", including the comma. If you no longer require my services, please say !leavemychannel in this chat`
+                                    response
                                 );
+                                log(userstate['display-name'], message, response);
                                 client.say(username, joinMessage);
                             });
                         }
@@ -80,10 +83,12 @@ let setupClientEvents = (client) => {
                     });
                 } else {
                     console.log(`${username} is already registered`);
+                    let response = `@${username}, According to my records, I'm already setup to join your channel. `;
                     client.say(
                         options.twitch.username,
-                        `@${username}, According to my records, I'm already setup to join your channel. `
+                        response
                     );
+                    log(username, message, response);
                 }
             });
         } else if (channel === `#${options.twitch.username}` && message === '!leavemychannel') {
@@ -94,10 +99,12 @@ let setupClientEvents = (client) => {
                             console.log(`Removed ${username} from the list of channels`);
                             client.part(username).then(() => {
                                 console.log(`Left channel: ${username}`);
+                                let response = `@${username}, Thank you for using E:D Commodity Bot, I have removed your channel from my records and left. If you have any feedback or suggestions, please reach out to @Purrcat259`;
                                 client.say(
                                     options.twitch.username,
-                                    `@${username}, Thank you for using E:D Commodity Bot, I have removed your channel from my records and left. If you have any feedback or suggestions, please reach out to @Purrcat259`
+                                    response
                                 );
+                                log(username, message, response);
                             });
                         }
                     }).catch((err) => {
@@ -105,10 +112,12 @@ let setupClientEvents = (client) => {
                     });
                 } else {
                     console.log(`${username} is not registered yet`);
+                    let response = `@${username}, According to my records, I am not setup to join your channel. If you want me to join, type !joinmychannel`;
                     client.say(
                         options.twitch.username,
-                        `@${username}, According to my records, I am not setup to join your channel. If you want me to join, type !joinmychannel`
+                        response
                     );
+                    log(username, message, response);
                 }
             });
         } else {
@@ -119,7 +128,9 @@ let setupClientEvents = (client) => {
             if (message.indexOf('@ed_commodity_bot') !== -1) {
                 // If there is no comma, then state that the message cannot be understood
                 if (message.indexOf(',') === -1) {
-                    client.say(channel, `@${username}, I cannot understand your request. Make sure the format is, (including the comma): @ed_commodity_bot commodity name, system name.`);
+                    let response = `@${username}, I cannot understand your request. Make sure the format is, (including the comma): @ed_commodity_bot commodity name, system name.`;
+                    client.say(channel, response);
+                    log(username, message, response);
                     return;
                 }
                 let data = message.split(', ')
@@ -159,6 +170,7 @@ let setupClientEvents = (client) => {
                         }
                     }
                     client.say(channel, response);
+                    log(username, message, response);
                 });
             }
         }
@@ -169,4 +181,10 @@ let setupClientEvents = (client) => {
     // client.on('hosting', (channel, target, viewers) => {
     //     client.part(channel);
     // });
+};
+
+let log = (username, query, answer) => {
+    db.logQuery(username, query, answer).then(() => {
+        console.log(`Logged Query, User: ${username} Query: ${query} Answer: ${answer}`);
+    });
 };
