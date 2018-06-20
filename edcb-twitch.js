@@ -91,7 +91,13 @@ let setupClientEvents = (client) => {
             // In any other channel, work as usual
             const username = userstate['display-name'];
             console.log(`[${channel}] <${username}>: ${message}`);
+            // Only take notice of messages targeted at the commodity bot
             if (message.indexOf('@ed_commodity_bot') !== -1) {
+                // If there is no comma, then state that the message cannot be understood
+                if (message.indexOf(',') === -1) {
+                    client.say(channel, `@${username}, I cannot understand your request. Make sure the format is, (including the comma): @ed_commodity_bot commodity name, system name.`);
+                    return;
+                }
                 let data = message.split(', ')
                 let commodityName = data[0].split('ed_commodity_bot ')[1]
                 let systemName = data[1];
