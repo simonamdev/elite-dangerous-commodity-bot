@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var exec = require('child_process').execFile;
 var DB = require('./db.js');
+var consolelog = require('./js/logging').consolelog;
 
 // Import options from other file
 const options = require('./options.js');
@@ -30,8 +31,14 @@ const joinMessage = `E:D Commodity Bot has joined this channel by
  please head to ed_commodity_bot's channel and say !leavemychannel
  in chat`;
 
+let debugLog = (message) => {
+    if (options.debug) {
+        console.log(message);
+    }
+};
+
 db.initialise().then(() => {
-    console.log('Starting EDCB Twitch interface');
+    consolelog('Starting EDCB Twitch interface');
     console.log(`Using oauth token: ${options.twitch.oauthToken.substring(0, 10)}...`);
     let client = new tmi.client(tmiOptions);
     client.connect().then((data) => {
