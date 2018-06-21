@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 
-const oauthFileName = 'secrets/twitch-oauth';
-const optimiserFileName = 'elite-dangerous-commodity-bot.exe';
+const oauthFileName: string = 'secrets/twitch-oauth';
+const optimiserFileName: string = 'elite-dangerous-commodity-bot.exe';
 
 const options: any = {
     debug: process.env.NODE_ENV === 'development',
