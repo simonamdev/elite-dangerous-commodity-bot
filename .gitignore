@@ -2,6 +2,7 @@
 dist/
 data/
 secrets/
+.fusebox/
 
 # Logs
 logs
