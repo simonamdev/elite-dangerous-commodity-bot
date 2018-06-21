@@ -32,4 +32,4 @@ const tmiOptions: any = {
     channels: [options.twitch.username]
 };
 
-export { options };
+export { options, tmiOptions };
