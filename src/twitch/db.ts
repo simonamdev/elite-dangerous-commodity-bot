@@ -54,6 +54,85 @@ class DB {
             });
         });
     }
+
+    public getStreamerChannels(): Promise {
+        return new Promise((resolve, reject) => {
+            let streamerNames = [];
+            this.openConnection();
+            this.db.serialize(() => {
+                this.db.all(`SELECT name FROM channels WHERE valid = 1;`, (err, rows) => {
+                    streamerNames = rows.map((row) => {
+                        return row.name;
+                    });
+                });
+                this.db.close(() => {
+                    resolve(streamerNames);
+                });
+            });
+        });
+    }
+
+    public checkIfStreamerAlreadyRegistered(channelName): Promise {
+        return new Promise((resolve, reject) => {
+            this.getStreamerChannels().then((streamerNames) => {
+                resolve(streamerNames.indexOf(channelName) !== -1);
+            });
+        });
+    }
+
+    public registerStreamerChannel(channelName): Promise {
+        return new Promise((resolve, reject) => {
+            this.openConnection();
+            this.db.serialize(() => {
+                let statement = this.db.prepare(
+                    `INSERT OR IGNORE INTO channels
+                    (name, timeAdded, valid)
+                    VALUES
+                    (?, ?, 1);`
+                );
+                statement.run(channelName, Math.floor(Date.now() / 1000));
+                statement.finalize();
+                this.db.close(() => {
+                    resolve(true);
+                });
+            });
+        });
+    }
+
+    public removeStreamerChannel(channelName): Promise {
+        return new Promise((resolve, reject) => {
+            this.openConnection();
+            this.db.serialize(() => {
+                let statement = this.db.prepare(
+                    `DELETE FROM channels WHERE name = ?;`
+                );
+                statement.run(channelName);
+                statement.finalize();
+                this.db.close(() => {
+                    resolve(true);
+                });
+            });
+        });
+    }
+
+    public logQuery(user, query, answer): Promise {
+        return new Promise((resolve, reject) => {
+            this.openConnection();
+            this.db.serialize(() => {
+                let statement = this.db.prepare(
+                    `INSERT INTO logs
+                    (user, query, answer, timestamp)
+                    VALUES
+                    (?, ?, ?, ?);`
+                );
+                statement.run(user, query, answer, Math.floor(Date.now() / 1000));
+                statement.finalize();
+                this.db.close(() => {
+                    resolve(true);
+                });
+            });
+        });
+    }
 }
 
 export { DB };
