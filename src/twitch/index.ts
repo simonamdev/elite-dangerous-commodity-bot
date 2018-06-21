@@ -1,6 +1,7 @@
 import { options } from './options';
+import { consoleLog } from './logging';
 
 const myMessage: string = 'Hello';
 
-console.log(myMessage);
-console.log(options.debug);
+consoleLog(myMessage);
+consoleLog(options.debug);

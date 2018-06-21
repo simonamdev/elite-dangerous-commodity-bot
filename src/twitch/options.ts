@@ -1,5 +1,5 @@
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const oauthFileName: string = 'secrets/twitch-oauth';
 const optimiserFileName: string = 'elite-dangerous-commodity-bot.exe';
