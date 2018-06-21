@@ -13,9 +13,23 @@ const options: any = {
         path: path.resolve(optimiserFileName)
     },
     twitch: {
-        oauthToken: fs.readFileSync(oauthFileName, 'utf8'),
-        username: 'ed_commodity_bot'
+        username: 'ed_commodity_bot',
+        oauthToken: fs.readFileSync(oauthFileName, 'utf8')
     }
+};
+
+const tmiOptions: any = {
+    options: {
+        debug: options.debug
+    },
+    connection: {
+        reconnect: true
+    },
+    identity: {
+        username: options.twitch.username,
+        password: options.twitch.oauthToken
+    },
+    channels: [options.twitch.username]
 };
 
 export { options };
