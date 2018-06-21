@@ -7,7 +7,7 @@ const optimiserFileName: string = 'elite-dangerous-commodity-bot.exe';
 const options: any = {
     debug: process.env.NODE_ENV === 'development',
     database: {
-        path: './data/edcb.db'
+        path: './src/twitch/edcb.db'
     },
     optimiser: {
         path: path.resolve(optimiserFileName)
