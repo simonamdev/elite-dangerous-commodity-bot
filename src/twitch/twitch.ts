@@ -1,7 +1,8 @@
 import * as tmi from 'tmi.js';
-import { consoleLog } from './logging';
+import { consoleLog, DatabaseLogger } from './logging';
 import { DB } from './db';
 import { options, tmiOptions } from './options';
+import { Responses } from './responses';
 
 class TwitchActions {
     private client: tmi.client;
@@ -10,10 +11,15 @@ class TwitchActions {
     constructor(client: tmi.client, db: DB) {
         this.client = client;
         this.db = db;
+        this.dbLogger = new DatabaseLogger(this.db);
+    }
+
+    private sayInChannel(username: string, message: string): void {
+        this.client.say(username, message);
     }
 
     public sayInOwnChannel(message: string): void {
-        this.client.say(options.twitch.username, message);
+        this.sayInChannel(options.twitch.username, message);
     }
 
     public joinStreamerChannels(): void {
@@ -38,7 +44,9 @@ class TwitchActions {
             }
             const username = userstate.username;
             if (isRegistrationCommand(channel, message)) {
-                this.handleRegistrationCommand(username);
+                this.handleRegistrationCommand(username).then((response) => {
+                    this.dbLogger.logResponse(username, message, response);
+                });
             } else if (isRemovalCommand(channel, message)) {
                 this.handleRemovalCommand(username);
             } else if (isQueryCommand(message)) {
@@ -47,7 +55,27 @@ class TwitchActions {
         };
     }
 
-    private handleRemovalCommand() {}
+    private handleRegistrationCommand(username: string) {
+        return new Promise((resolve, reject) => {
+            consoleLog(`Processing registration for: ${username}`);
+            let response: string = '';
+            this.db.checkIfStreamerAlreadyRegistered(username).then((alreadyRegistered) => {
+                if (alreadyRegistered) {
+                    consoleLog(`Already registered to join channel: ${username}`);
+                    response = Responses.alreadyJoinedChannelResponse(username);
+                    this.sayInOwnChannel(response);
+                    resolve(response);
+                } else {
+                    this.joinChannel(username).then(() => {
+                        consoleLog(`Joined channel: ${username}`);
+                        response = Responses.channelJoinResponse(username);
+                        this.sayInChannel(username, response);
+                        resolve(response);
+                    });
+                }
+            });
+        });
+    }
 
     private handleRemovalCommand() {}
 
@@ -69,6 +97,10 @@ class TwitchActions {
 
     private isWithinOwnChannel(channel: string): boolean {
         return channel === `#${options.twitch.username}`;
+    }
+
+    private joinChannel(channelName: string) {
+        return this.client.joinChannel(channelName);
     }
 }
 

@@ -16,4 +16,16 @@ const addZero = (num: number): string => {
     return `${num}`;
 };
 
-export { consoleLog };
+class DatabaseLogger {
+    constructor(db: DB) {
+        this.db = db;
+    }
+
+    public logResponse(username, query, response) {
+        db.logQuery(username, query, response).then(() => {
+            consoleLog(`Username: ${username}, Query: ${query}, Response: ${response}`);
+        });
+    }
+};
+
+export { consoleLog, DatabaseLogger };
