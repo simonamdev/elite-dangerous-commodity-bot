@@ -1,4 +1,6 @@
 import * as tmi from 'tmi.js';
+import * as util from 'util';
+import { execFile } from 'child_process';
 import { consoleLog, DatabaseLogger } from './logging';
 import { DB } from './db';
 import { options, tmiOptions } from './options';
@@ -43,7 +45,11 @@ class TwitchActions {
                 return;
             }
             const username = userstate.username;
-            if (isRegistrationCommand(channel, message)) {
+            if (isInfoCommand(channel, message)) {
+                this.handleInfoCommand(username).then((response) => {
+                    this.dbLogger.logQuery(username, channel, message, response);
+                });
+            } else if (isRegistrationCommand(channel, message)) {
                 this.handleRegistrationCommand(username).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
@@ -52,7 +58,9 @@ class TwitchActions {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
             } else if (isQueryCommand(message)) {
-                this.handleQueryCommand(channel, username, message);
+                this.handleQueryCommand(channel, username, message).then((response) => {
+                    this.dbLogger.logQuery(username, channel, message, response);
+                });
             } else {
                 // Generic "cannot understand" response
                 this.handleUnknownCommand(channel, username, message).then((response) => {
@@ -105,10 +113,58 @@ class TwitchActions {
         });
     }
 
+    private handleInfoCommand(username: string) {
+        return new Promise((resolve, reject) => {
+            let response = Respones.channelInfoResponse(username);
+            this.sayInOwnChannel(response);
+        });
+    }
+
     private handleQueryCommand(channel: string, username: string, message: string) {
         return new Promise((resolve, reject) => {
             consoleLog(`Processing query for: ${username}`);
-
+            // Split on the comma and space
+            const splitMessage = message.split(', ');
+            // Get the commodity name and system name on either side
+            const firstPart = splitMessage[0].split('ed_commodity_bot ');
+            const commodityName = firstPart[1];
+            const systemName = splitMessage[1];
+            // These are to be used as CLI params
+            const cliArgs = this.getCliArgs(commodityName, systemName);
+            execFile(options.optimiser.path, cliArgs, (error, stdout, stderr) => {
+                // console.log(`Error: ${error}`);
+                // console.log(`STDOUT: ${stdout}`);
+                // console.log(`STDERR: ${stderr}`);
+                resolve(JSON.parse(stdout));
+            });
+        }).then((result) => {
+            let response = 'Unable to recognise request';
+            const commodity = result.commodity;
+            const stations = result.stations;
+            const referenceSystem = result.reference_system;
+            const closestSystem = result.closest_system;
+            if (!commodity.exists) {
+                resposne = Responses.commodityDoesNotExistResponse(username, commodity.name);
+            } else if (!stations) {
+                response = Responses.noStationSellsCommodityResponse(username, commodity.name);
+            } else {
+                const distanceToClosestSystem = Math.sqrt(
+                    Math.pow(referenceSystem['X'] - closestSystem['X'], 2) +
+                    Math.pow(referenceSystem['Y'] - closestSystem['Y'], 2) +
+                    Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
+                );
+                response = Responses.stationsSellCommodityResponse(
+                    username.name,
+                    commodty.name,
+                    closestSystem,
+                    referenceSystem,
+                    distanceToClosestSystem,
+                    stations
+                );
+            }
+            return this.sayInChannel(channel, response).then(() => {
+                resolve(response);
+            });
         });
     }
 
@@ -129,6 +185,10 @@ class TwitchActions {
         retrun targetedAtBot && hasComma;
     }
 
+    private isInfoCommand(channel: string, message: string): boolean {
+        return isWithinOwnChannel(channel) && message == '!info';
+    }
+
     private isRegistrationCommand(channel: string, message: string): boolean {
         return isWithinOwnChannel(channel) && message === '!joinmychannel';
     }
@@ -141,9 +201,18 @@ class TwitchActions {
         return channel === `#${options.twitch.username}`;
     }
 
-    private joinChannel(channelName: string) {
+    private joinChannel(channelName: string): Promise {
         return this.client.joinChannel(channelName);
     }
+
+    private getCliArgs(commodityName: string, systemName: string): string[] {
+        const commodityArg = `-commodity=${commodityName}`;
+        const systemArg = `-system=${systemName}`;
+        const args = [commodityArg, systemArg];
+        return args;
+    }
+
+    private handleCommodityDoesNotExist(): void {}
 }
 
 export { TwitchActions };
