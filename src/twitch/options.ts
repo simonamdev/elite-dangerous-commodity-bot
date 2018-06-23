@@ -1,13 +1,14 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
+const debug = process.env.NODE_ENV === 'development';
 const oauthFileName: string = 'secrets/twitch-oauth';
-const optimiserFileName: string = 'elite-dangerous-commodity-bot.exe';
+const optimiserFileName: string = debug ? 'elite-dangerous-commodity-bot.exe' : 'elite-dangerous-commodity-bot';
 
 const options: any = {
-    debug: process.env.NODE_ENV === 'development',
+    debug: debug,
     database: {
-        path: '../../src/twitch/edcb.db'
+        path: './data/edcb.db'
     },
     optimiser: {
         path: path.resolve(optimiserFileName)
