@@ -61,7 +61,7 @@ class TwitchActions {
                 this.handleQueryCommand(channel, username, message).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
-            } else if (!this.isWithinOwnChannel(channel)) {
+            } else if (this.isTargetedAtBot(message)) {
                 // Generic "cannot understand" response
                 this.handleUnknownCommand(channel, username, message).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
@@ -182,14 +182,17 @@ class TwitchActions {
         return new Promise((resolve, reject) => {
             consoleLog(`Unable to understand message: ${message} from: ${username} in channel: ${channel}`);
             response = Responses.cannotUnderstandRequestResponse(username);
-            this.sayInChannel(channel, response).then(() => {
-                resolve(response);
-            });
+            this.sayInChannel(channel, response);
+            resolve(response);
         });
     }
 
+    private isTargetedAtBot(message: string) {
+        return message.indexOf(options.twitch.username) !== -1;
+    }
+
     private isQueryCommand(message: string): boolean {
-        const targetedAtBot: boolean = message.indexOf(options.twitch.username) !== -1;
+        const targetedAtBot: boolean = this.isTargetedAtBot(message);
         const hasComma: boolean = message.indexOf(',') !== -1;
         return targetedAtBot && hasComma;
     }
@@ -207,7 +210,11 @@ class TwitchActions {
     }
 
     private isWithinOwnChannel(channel: string): boolean {
-        return channel === `#${options.twitch.username}`;
+        const hasHash = channel.indexOf('#') !== -1;
+        if (!hasHash) {
+            return channel.toLowerCase() === options.twitch.username.toLowerCase();
+        }
+        return channel.toLowerCase() === `#${options.twitch.username.toLowerCase()}`;
     }
 
     private joinChannel(channelName: string): Promise {
