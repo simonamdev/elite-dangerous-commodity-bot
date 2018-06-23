@@ -17,7 +17,8 @@ class DB {
     }
 
     private initialiseDatabaseFile(): void {
-        if (!!fs.existsSync(this.path) || this.debug) {
+        if (!fs.existsSync(this.path) || this.debug) {
+            console.log('Re/creating DB file');
             fs.open(this.path, 'w', 0o666, (err, fd) => {
                 if (err) {
                     throw err;
@@ -58,6 +59,7 @@ class DB {
 
     public getStreamerChannels(): Promise {
         return new Promise((resolve, reject) => {
+            console.log('Getting channels')
             let streamerNames = [];
             this.openConnection();
             this.db.serialize(() => {
