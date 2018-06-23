@@ -26,10 +26,10 @@ class TwitchActions {
 
     public joinStreamerChannels(): void {
         this.db.getStreamerChannels().then((streamerChannels) => {
-            console.log(`Joining ${streamerChannels.length} channels`);
+            console.log(`> Joining ${streamerChannels.length} channels`);
             streamerChannels.forEach((streamer) => {
                 consoleLog(`Joining: ${streamer}`);
-                client.join(streamer).then(() => {
+                this.client.join(streamer).then(() => {
                     consoleLog(`Joined: ${streamer}`);
                 }).catch((err) => {
                     consoleLog(`Error joining channel of: ${streamer}: ${err}`);
