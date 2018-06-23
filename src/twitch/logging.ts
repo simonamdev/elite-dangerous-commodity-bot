@@ -21,9 +21,9 @@ class DatabaseLogger {
         this.db = db;
     }
 
-    public logResponse(username, query, response) {
-        db.logQuery(username, query, response).then(() => {
-            consoleLog(`Username: ${username}, Query: ${query}, Response: ${response}`);
+    public logQuery(username, channel, query, response) {
+        this.db.logQuery(username, channel, query, response).then(() => {
+            consoleLog(`Username: ${username}, Channel: ${channel}, Query: ${query}, Response: ${response}`);
         });
     }
 };

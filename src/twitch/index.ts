@@ -3,6 +3,7 @@ import { consoleLog } from './logging';
 import { DB } from './db';
 import * as tmi from 'tmi.js';
 import { TwitchActions } from './twitch';
+import { Responses } from './responses';
 
 let twitchActions;
 const twitchClient = new tmi.client(tmiOptions);

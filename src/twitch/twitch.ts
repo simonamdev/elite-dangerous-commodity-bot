@@ -45,19 +45,19 @@ class TwitchActions {
                 return;
             }
             const username = userstate.username;
-            if (isInfoCommand(channel, message)) {
+            if (this.isInfoCommand(channel, message)) {
                 this.handleInfoCommand(username).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
-            } else if (isRegistrationCommand(channel, message)) {
+            } else if (this.isRegistrationCommand(channel, message)) {
                 this.handleRegistrationCommand(username).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
-            } else if (isRemovalCommand(channel, message)) {
+            } else if (this.isRemovalCommand(channel, message)) {
                 this.handleRemovalCommand(username).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
-            } else if (isQueryCommand(message)) {
+            } else if (this.isQueryCommand(message)) {
                 this.handleQueryCommand(channel, username, message).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
@@ -81,11 +81,15 @@ class TwitchActions {
                     this.sayInOwnChannel(response);
                     resolve(response);
                 } else {
-                    this.joinChannel(username).then(() => {
-                        consoleLog(`Joined channel: ${username}`);
-                        response = Responses.channelJoinResponse(username);
-                        this.sayInOwnChannel(response);
-                        resolve(response);
+                    return this.db.registerStreamerChannel(username).then((completed) => {
+                        if (completed) {
+                            response = Responses.channelJoinResponse(username);
+                            this.sayInOwnChannel(response);
+                            return this.joinChannel(username).then(() => {
+                                consoleLog(`Joined channel: ${username}`);
+                                resolve(response);
+                            });
+                        }
                     });
                 }
             });
@@ -115,7 +119,7 @@ class TwitchActions {
 
     private handleInfoCommand(username: string) {
         return new Promise((resolve, reject) => {
-            let response = Respones.channelInfoResponse(username);
+            let response = Responses.channelInfoResponse(username);
             this.sayInOwnChannel(response);
         });
     }
@@ -186,15 +190,15 @@ class TwitchActions {
     }
 
     private isInfoCommand(channel: string, message: string): boolean {
-        return isWithinOwnChannel(channel) && message == '!info';
+        return this.isWithinOwnChannel(channel) && message == '!info';
     }
 
     private isRegistrationCommand(channel: string, message: string): boolean {
-        return isWithinOwnChannel(channel) && message === '!joinmychannel';
+        return this.isWithinOwnChannel(channel) && message === '!joinmychannel';
     }
 
     private isRemovalCommand(channel: string, message: string): boolean {
-        return isWithinOwnChannel(channel) && message === '!leavemychannel';
+        return this.isWithinOwnChannel(channel) && message === '!leavemychannel';
     }
 
     private isWithinOwnChannel(channel: string): boolean {
@@ -202,7 +206,7 @@ class TwitchActions {
     }
 
     private joinChannel(channelName: string): Promise {
-        return this.client.joinChannel(channelName);
+        return this.client.join(channelName);
     }
 
     private getCliArgs(commodityName: string, systemName: string): string[] {

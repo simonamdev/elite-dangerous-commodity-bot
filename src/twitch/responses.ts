@@ -1,8 +1,7 @@
 
 class Responses {
     public static channelInfoResponse(username: string): string {
-        return
-        `@${username} E:D Commodity Bot allows you to search for the closest
+        return `@${username} E:D Commodity Bot allows you to search for the closest
          star system that sells a specific commodity. Queries can be made by
          inviting ed_commodity_bot into your channel by typing !joinmychannel,
          then, in your channel,
@@ -13,8 +12,7 @@ class Responses {
     }
 
     public static channelJoinResponse(username: string): string {
-        return
-        `@${username},
+        return `@${username},
          I will be joining your channel in a short while.
          Requests should be in the form of:
          "@ed_commodity_bot commodity name, system name", including the comma.
@@ -23,8 +21,7 @@ class Responses {
     }
 
     public static alreadyJoinedChannelResponse(username: string): string {
-        return
-        `@${username}, According to my records,
+        return `@${username}, According to my records,
          I'm already setup to join your channel.
          If you do not need my services any longer,
          type !leavemychannel in this chat.
@@ -32,8 +29,7 @@ class Responses {
     }
 
     public static channelRemovalResponse(username: string): string {
-        return
-        `@${username}, I have left your channel.
+        return `@${username}, I have left your channel.
          Thank you for using E:D Commodity Bot.
          If you want to use E:D Commodity Bot again,
          type !joinmychannel here again.
@@ -41,16 +37,14 @@ class Responses {
     }
 
     public static unableToRemoveResponse(username: string): string {
-        return
-        `@${username}, accord to my records, I am not setup
+        return `@${username}, According to my records, I am not setup
          to join your channel. If you want E:D Commodity Bot
          in your channel, type !joinmychannel here.
         `;
     }
 
     public static cannotUnderstandRequestResponse(username: string): string {
-        return
-        `@${username}, I cannot understand your request.
+        return `@${username}, I cannot understand your request.
          Make sure the format is, (including the comma):
          @ed_commodity_bot commodity name, system name.
          For example: @ed_commodity_bot coffee, sol
@@ -66,15 +60,13 @@ class Responses {
     }
 
     public static stationsSellCommodityResponse(username: string, commodity: string, closestSystem: {}, referenceSystem: {}, distance: number, stations: {}[]): string {
-        let response =
-        `@${username}, my records contain a system
+        let response = `@${username}, my records contain a system
          close to ${referenceSystem['Name']} selling ${commodity}
          The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
          It can be found at the following station/s:
         `;
         stations.forEach((station) => {
-            response +=
-            ` [Name: ${station['Name']},
+            response += ` [Name: ${station['Name']},
              Distance to star: ${station['DistanceToStar']}Ls,
              Largest landing pad: ${station['MaxLandingPad']}]
             `;
