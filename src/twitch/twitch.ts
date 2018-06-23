@@ -45,14 +45,19 @@ class TwitchActions {
             const username = userstate.username;
             if (isRegistrationCommand(channel, message)) {
                 this.handleRegistrationCommand(username).then((response) => {
-                    this.dbLogger.logResponse(username, message, response);
+                    this.dbLogger.logQuery(username, channel, message, response);
                 });
             } else if (isRemovalCommand(channel, message)) {
                 this.handleRemovalCommand(username).then((response) => {
-                    this.dbLogger.logResponse(username, message, response);
+                    this.dbLogger.logQuery(username, channel, message, response);
                 });
             } else if (isQueryCommand(message)) {
-                this.handleQueryCommand(username, message);
+                this.handleQueryCommand(channel, username, message);
+            } else {
+                // Generic "cannot understand" response
+                this.handleUnknownCommand(channel, username, message).then((response) => {
+                    this.dbLogger.logQuery(username, channel, message, response);
+                });
             }
         };
     }
@@ -71,7 +76,7 @@ class TwitchActions {
                     this.joinChannel(username).then(() => {
                         consoleLog(`Joined channel: ${username}`);
                         response = Responses.channelJoinResponse(username);
-                        this.sayInChannel(username, response);
+                        this.sayInOwnChannel(response);
                         resolve(response);
                     });
                 }
@@ -100,12 +105,28 @@ class TwitchActions {
         });
     }
 
-    private handleQueryCommand() {}
+    private handleQueryCommand(channel: string, username: string, message: string) {
+        return new Promise((resolve, reject) => {
+            consoleLog(`Processing query for: ${username}`);
+
+        });
+    }
+
+    private handleUnknownCommand(channel: string, username: string, message: string) {
+        let response = '';
+        return new Promise((resolve, reject) => {
+            consoleLog(`Unable to understand message: ${message} from: ${username} in channel: ${channel}`);
+            response = Responses.cannotUnderstandRequestResponse(username);
+            this.sayInChannel(channel, response).then(() => {
+                resolve(response);
+            });
+        });
+    }
 
     private isQueryCommand(message: string): boolean {
-        const commodityBotPresent = message.indexOf('@ed_commodity_bot');
-        const commaPresent = message.indexOf(',') === -1;
-        return commodityBotPresent && commaPresent;
+        const targetedAtBot: boolean = message.indexOf(options.twitch.username) !== -1;
+        const hasComma: boolean = message.indexOf(',') !== -1;
+        retrun targetedAtBot && hasComma;
     }
 
     private isRegistrationCommand(channel: string, message: string): boolean {

@@ -42,6 +42,7 @@ class DB {
                     `CREATE TABLE IF NOT EXISTS logs (
                         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                         user TEXT NOT NULL,
+                        channel TEXT NOT NULL,
                         query TEXT NOT NULL,
                         answer TEXT NOT NULL,
                         timestamp INTEGER NOT NULL
@@ -115,17 +116,17 @@ class DB {
         });
     }
 
-    public logQuery(user, query, answer): Promise {
+    public logQuery(user, channel, query, answer): Promise {
         return new Promise((resolve, reject) => {
             this.openConnection();
             this.db.serialize(() => {
                 let statement = this.db.prepare(
                     `INSERT INTO logs
-                    (user, query, answer, timestamp)
+                    (user, channel, query, answer, timestamp)
                     VALUES
-                    (?, ?, ?, ?);`
+                    (?, ?, ?, ?, ?);`
                 );
-                statement.run(user, query, answer, Math.floor(Date.now() / 1000));
+                statement.run(user, channel, query, answer, Math.floor(Date.now() / 1000));
                 statement.finalize();
                 this.db.close(() => {
                     resolve(true);

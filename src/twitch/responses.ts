@@ -35,6 +35,15 @@ class Responses {
          in your channel, type !joinmychannel here.
         `;
     }
+
+    public static cannotUnderstandRequestResponse(username: string): string {
+        return
+        `@${username}, I cannot understand your request.
+         Make sure the format is, (including the comma):
+         @ed_commodity_bot commodity name, system name.
+         For example: @ed_commodity_bot coffee, sol
+        `;
+    }
 };
 
 export { Responses };
