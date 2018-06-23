@@ -105,7 +105,10 @@ class TwitchActions {
                     consoleLog(`Removing: ${username}`);
                     response = Responses.channelRemovalResponse(username);
                     this.db.removeStreamerChannel(username).then((removed) => {
-                        consoleLog(`Removed: ${username}`);
+                        if (removed) {
+                            consoleLog(`Removed: ${username}`);
+                            this.client.part(username);
+                        }
                     });
                 } else {
                     consoleLog(`${username} is not registered, unable to remove`);
@@ -186,7 +189,7 @@ class TwitchActions {
     private isQueryCommand(message: string): boolean {
         const targetedAtBot: boolean = message.indexOf(options.twitch.username) !== -1;
         const hasComma: boolean = message.indexOf(',') !== -1;
-        retrun targetedAtBot && hasComma;
+        return targetedAtBot && hasComma;
     }
 
     private isInfoCommand(channel: string, message: string): boolean {
