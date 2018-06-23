@@ -16,7 +16,7 @@ class Responses {
          I will be joining your channel in a short while.
          Requests should be in the form of:
          "@ed_commodity_bot commodity name, system name", including the comma.
-         If you no longer require EDCB, type !leavemychannel in this chat
+         If you no longer require EDCB, type !leavemychannel in this chat.
         `;
     }
 
@@ -47,21 +47,25 @@ class Responses {
         return `@${username}, I cannot understand your request.
          Make sure the format is, (including the comma):
          @ed_commodity_bot commodity name, system name.
-         For example: @ed_commodity_bot coffee, sol
+         For example: @ed_commodity_bot Coffee, Sol
         `;
     }
 
     public static commodityDoesNotExistResponse(username: string, commodity: string): string {
-        return `@${username}, The commodity: ${commodity} does not exist`;
+        return `@${username}, The commodity: ${commodity} does not exis.t`;
+    }
+
+    public static systemDoesNotExistResponse(username: string): string {
+        return `@${username}, That star system does not exist.`;
     }
 
     public static noStationSellsCommodityResponse(username: string, commodity: string): string {
-        return `@${username}, No stations sell the commodity: ${commodity}`;
+        return `@${username}, No stations sell the commodity: ${commodity}.`;
     }
 
     public static stationsSellCommodityResponse(username: string, commodity: string, closestSystem: {}, referenceSystem: {}, distance: number, stations: {}[]): string {
         let response = `@${username}, my records contain a system
-         close to ${referenceSystem['Name']} selling ${commodity}
+         close to ${referenceSystem['Name']} selling ${commodity}.
          The ${closestSystem['Name']} system is ${Math.ceil(distance)}Ly away.
          It can be found at the following station/s:
         `;

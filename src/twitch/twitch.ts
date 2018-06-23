@@ -61,7 +61,7 @@ class TwitchActions {
                 this.handleQueryCommand(channel, username, message).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
                 });
-            } else {
+            } else if (!this.isWithinOwnChannel(channel)) {
                 // Generic "cannot understand" response
                 this.handleUnknownCommand(channel, username, message).then((response) => {
                     this.dbLogger.logQuery(username, channel, message, response);
@@ -148,10 +148,13 @@ class TwitchActions {
             let response = 'Unable to recognise request';
             const commodity = result.commodity;
             const stations = result.stations;
+            const referenceSystemExists = result.reference_system_exists;
             const referenceSystem = result.reference_system;
             const closestSystem = result.closest_system;
             if (!commodity.exists) {
-                resposne = Responses.commodityDoesNotExistResponse(username, commodity.name);
+                response = Responses.commodityDoesNotExistResponse(username, commodity.name);
+            } else if (!referenceSystemExists) {
+                response = Responses.systemDoesNotExistResponse(username);
             } else if (!stations) {
                 response = Responses.noStationSellsCommodityResponse(username, commodity.name);
             } else {
@@ -161,17 +164,16 @@ class TwitchActions {
                     Math.pow(referenceSystem['Z'] - closestSystem['Z'], 2)
                 );
                 response = Responses.stationsSellCommodityResponse(
-                    username.name,
-                    commodty.name,
+                    username,
+                    commodity.name,
                     closestSystem,
                     referenceSystem,
                     distanceToClosestSystem,
                     stations
                 );
             }
-            return this.sayInChannel(channel, response).then(() => {
-                resolve(response);
-            });
+            this.sayInChannel(channel, response);
+            return response;
         });
     }
 
@@ -218,8 +220,6 @@ class TwitchActions {
         const args = [commodityArg, systemArg];
         return args;
     }
-
-    private handleCommodityDoesNotExist(): void {}
 }
 
 export { TwitchActions };

@@ -20,6 +20,7 @@ type Commodity struct {
 type Response struct {
     Commodity Commodity         `json:"commodity"`
     ReferenceSystem    models.StarSystem `json:"reference_system"`
+    ReferenceSystemExists bool `json:"reference_system_exists"`
     ClosestSystem    models.StarSystem `json:"closest_system"`
     Stations  []models.Station  `json:"stations"`
 }
@@ -31,7 +32,8 @@ func main() {
     systemName = strings.Title(systemName)
     closestSystem, relevantStations, commodity, referenceSystem := getClosestCommoditySystemAndStations(commodityName, systemName, verbose)
     // Place the answer in a struct
-    answer := Response{commodity, referenceSystem, closestSystem, relevantStations}
+    referenceSystemExists := referenceSystem.Name != "";
+    answer := Response{commodity, referenceSystem, referenceSystemExists, closestSystem, relevantStations}
     // Serialise the struct to JSON for writing to stdout
     b, err := json.Marshal(answer)
     if err != nil {
