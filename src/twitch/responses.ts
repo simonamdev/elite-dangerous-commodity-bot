@@ -1,8 +1,6 @@
-import { consoleLog } from './logging';
 
 class Responses {
-    public static channelJoinResponse(username: string) {
-        consoleLog(`Joined the following channel: ${username}`);
+    public static channelJoinResponse(username: string): string {
         return
         `@${username},
          I will be joining your channel in a short while.
@@ -12,12 +10,29 @@ class Responses {
         `;
     }
 
-    public static alreadyJoinedChannelResponse(username: string) {
+    public static alreadyJoinedChannelResponse(username: string): string {
         return
         `@${username}, According to my records,
          I'm already setup to join your channel.
          If you do not need my services any longer,
          type !leavemychannel in this chat.
+        `;
+    }
+
+    public static channelRemovalResponse(username: string): string {
+        return
+        `@${username}, I have left your channel.
+         Thank you for using E:D Commodity Bot.
+         If you want to use E:D Commodity Bot again,
+         type !joinmychannel here again.
+        `;
+    }
+
+    public static unableToRemoveResponse(username: string): string {
+        return
+        `@${username}, accord to my records, I am not setup
+         to join your channel. If you want E:D Commodity Bot
+         in your channel, type !joinmychannel here.
         `;
     }
 };

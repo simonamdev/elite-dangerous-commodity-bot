@@ -48,7 +48,9 @@ class TwitchActions {
                     this.dbLogger.logResponse(username, message, response);
                 });
             } else if (isRemovalCommand(channel, message)) {
-                this.handleRemovalCommand(username);
+                this.handleRemovalCommand(username).then((response) => {
+                    this.dbLogger.logResponse(username, message, response);
+                });
             } else if (isQueryCommand(message)) {
                 this.handleQueryCommand(username, message);
             }
@@ -77,7 +79,26 @@ class TwitchActions {
         });
     }
 
-    private handleRemovalCommand() {}
+    private handleRemovalCommand(username: string) {
+        return new Promise((resolve, reject) => {
+            consoleLog(`Processing removal for: ${username}`);
+            let response: string = '';
+            this.db.checkIfStreamerAlreadyRegistered(username).then((alreadyRegistered) => {
+                if (alreadyRegistered) {
+                    consoleLog(`Removing: ${username}`);
+                    response = Responses.channelRemovalResponse(username);
+                    this.db.removeStreamerChannel(username).then((removed) => {
+                        consoleLog(`Removed: ${username}`);
+                    });
+                } else {
+                    consoleLog(`${username} is not registered, unable to remove`);
+                    response = Responses.unableToRemoveResponse(username);
+                }
+                this.sayInOwnChannel(response);
+                resolve(response);
+            });
+        });
+    }
 
     private handleQueryCommand() {}
 
