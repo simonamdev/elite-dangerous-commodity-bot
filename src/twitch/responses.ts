@@ -52,7 +52,7 @@ class Responses {
     }
 
     public static commodityDoesNotExistResponse(username: string, commodity: string): string {
-        return `@${username}, The commodity: ${commodity} does not exis.t`;
+        return `@${username}, The commodity: ${commodity} does not exist.`;
     }
 
     public static systemDoesNotExistResponse(username: string): string {
